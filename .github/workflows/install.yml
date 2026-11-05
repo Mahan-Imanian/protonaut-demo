@@ -1,0 +1,28 @@
+name: Installer
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: One-line install with dependencies
+        run: curl -fsSL https://raw.githubusercontent.com/Mahan-Imanian/protonaut/main/install.sh | sh -s -- --with-deps
+      - run: sudo protonaut setup
+      - name: Healthy build must pass
+        run: protonaut test dist/Windows --exe MyGame.exe --install --observe-secs 8
+      - name: Crashing build must fail with exit code 1
+        run: |
+          mkdir crash
+          cp fixtures/fx_crash.exe crash/MyGame.exe
+          code=0
+          protonaut test crash --exe MyGame.exe --observe-secs 8 --results out-crash || code=$?
+          echo "exit code $code"
+          [ "$code" -eq 1 ]
