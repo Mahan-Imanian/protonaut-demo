@@ -1,0 +1,26 @@
+name: Smoke
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: preflight
+        uses: Mahan-Imanian/steamos-preflight@v0.1.0
+        with:
+          build: dist/healthy
+          exe: Game.exe
+          observe-secs: "12"
+      - name: Show outputs
+        env:
+          VERDICT: ${{ steps.preflight.outputs.verdict }}
+          EXIT_CODE: ${{ steps.preflight.outputs.exit-code }}
+        run: echo "verdict=$VERDICT exit-code=$EXIT_CODE"
