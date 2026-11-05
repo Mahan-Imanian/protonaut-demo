@@ -17,7 +17,7 @@ jobs:
         with:
           persist-credentials: false
       - id: protonaut
-        uses: Mahan-Imanian/protonaut@feat/protonaut
+        uses: Mahan-Imanian/protonaut@v0
         with:
           fail-job: "false"
           build: dist/Windows
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: protonaut-report
-      - uses: Mahan-Imanian/protonaut/comment@feat/protonaut
+      - uses: Mahan-Imanian/protonaut/comment@v0
         with:
           report: report.json
           pr-number: ${{ github.event.pull_request.number }}
