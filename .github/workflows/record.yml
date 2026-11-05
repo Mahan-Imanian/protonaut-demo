@@ -1,0 +1,55 @@
+name: Record demo
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: Mahan-Imanian/protonaut
+          ref: feat/protonaut
+          path: tool
+          persist-credentials: false
+      - name: System packages
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends asciinema xserver-xorg-core xserver-xorg-video-dummy x11-xserver-utils x11-utils imagemagick mesa-vulkan-drivers python3 curl tesseract-ocr tesseract-ocr-eng libc6:i386 libx11-6:i386 libxext6:i386 libxrandr2:i386 libxi6:i386 libxcursor1:i386 libxinerama1:i386 libxcomposite1:i386 libxrender1:i386 libxfixes3:i386 libfreetype6:i386 libfontconfig1:i386 libvulkan1:i386 mesa-vulkan-drivers:i386 libgl1:i386 libgl1-mesa-dri:i386 fonts-dejavu-core
+      - name: Build and prepare
+        run: |
+          (cd tool && cargo build --locked --release && sudo install -m 0755 target/release/protonaut /usr/local/bin/protonaut)
+          sudo protonaut setup
+          protonaut proton install stable
+      - name: Crash build, recorded
+        run: |
+          mkdir -p crash letterbox out
+          cp fixtures/fx_crash.exe crash/MyGame.exe
+          cp fixtures/fx_letterbox.exe letterbox/MyGame.exe
+          cat > run.sh <<'S'
+          printf '\033[1;38;2;255;79;0m$\033[0m protonaut test crash --exe MyGame.exe\n'
+          sleep 1
+          protonaut test crash --exe MyGame.exe --observe-secs 8 --results out/crash
+          sleep 3
+          S
+          script -qec "asciinema rec --overwrite --cols 118 --rows 32 --idle-time-limit 1.5 -c 'bash run.sh' out/demo.cast" /dev/null || true
+      - name: Render GIF
+        run: |
+          curl -fsSL -o agg https://github.com/asciinema/agg/releases/latest/download/agg-x86_64-unknown-linux-gnu
+          chmod +x agg
+          ./agg --font-size 18 --theme '0D1524,F3ECDD,0D1524,FF5C5C,39D98A,F2C14E,7AA2F7,FF4F00,5CC8FF,F3ECDD' out/demo.cast out/demo.gif
+      - name: Letterbox report
+        run: protonaut test letterbox --exe MyGame.exe --observe-secs 8 --results out/letterbox || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: demo
+          path: out
