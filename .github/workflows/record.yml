@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Mahan-Imanian/protonaut
-          ref: feat/apache-and-plain-wording
+          ref: main
           path: tool
           persist-credentials: false
       - name: System packages
