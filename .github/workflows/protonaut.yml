@@ -1,0 +1,50 @@
+name: Protonaut
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  protonaut:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: protonaut
+        uses: Mahan-Imanian/protonaut@feat/protonaut
+        with:
+          fail-job: "false"
+          build: dist/Windows
+          exe: MyGame.exe
+          observe-secs: "12"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: protonaut-report
+          path: ${{ steps.protonaut.outputs.results }}/report.json
+      - name: Fail on compatibility failures
+        if: steps.protonaut.outputs.verdict != 'pass'
+        run: exit 1
+
+  comment:
+    needs: protonaut
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: protonaut-report
+      - uses: Mahan-Imanian/protonaut/comment@feat/protonaut
+        with:
+          report: report.json
+          pr-number: ${{ github.event.pull_request.number }}
