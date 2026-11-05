@@ -40,7 +40,7 @@ jobs:
           protonaut test crash --exe MyGame.exe --observe-secs 8 --results out/crash
           sleep 3
           S
-          script -qec "asciinema rec --overwrite --cols 118 --rows 32 --idle-time-limit 2 -c 'bash run.sh' out/demo.cast" /dev/null || true
+          script -qec "asciinema rec --overwrite --cols 104 --rows 28 --idle-time-limit 2 -c 'bash run.sh' out/demo.cast" /dev/null || true
       - name: Render GIF
         run: |
           curl -fsSL -o agg https://github.com/asciinema/agg/releases/latest/download/agg-x86_64-unknown-linux-gnu
